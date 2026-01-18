@@ -23,56 +23,58 @@
 <pre id="output"></pre>
 
 <script>
-function getValue(text, key) {
-  const regex = new RegExp(key + "\\s*:\\s*(.+)");
-  const match = text.match(regex);
-  return match ? match[1].trim() : "-";
+function find(section, key) {
+  const r = new RegExp(section + "[\\s\\S]*?" + key + "\\s*:\\s*(.+)");
+  const m = document.getElementById('input').value.match(r);
+  return m ? m[1].trim() : "-";
+}
+
+function filenameOnly(path) {
+  if (!path) return "-";
+  return path.split(/\\|\//).pop();
 }
 
 function summarize() {
   const t = document.getElementById('input').value;
+  const out = [];
 
-  const result = [];
+  // VIDEO
+  out.push("Video");
+  out.push("Complete name               : " + filenameOnly(find("General", "Complete name")));
+  out.push("Duration                    : " + find("Video", "Duration"));
+  out.push("Bit rate                    : " + find("Video", "Bit rate"));
+  out.push("Width                       : " + find("Video", "Width"));
+  out.push("Height                      : " + find("Video", "Height"));
+  out.push("");
 
-  // Video
-  result.push("Video");
-  result.push("Complete name               : " + getValue(t, "Complete name"));
-  result.push("Duration                    : " + getValue(t, "Duration"));
-  result.push("Bit rate                    : " + getValue(t, "Bit rate\\s*:\\s*[0-9]"));
-  result.push("Width                       : " + getValue(t, "Width"));
-  result.push("Height                      : " + getValue(t, "Height"));
-  result.push("");
+  // AUDIO
+  out.push("Audio");
+  out.push("Format                      : " + find("Audio", "Format"));
+  out.push("Duration                    : " + find("Audio", "Duration"));
+  out.push("Bit rate                    : " + find("Audio", "Bit rate"));
+  out.push("Channel(s)                  : " + find("Audio", "Channel\\(s\\)"));
+  out.push("Sampling rate               : " + find("Audio", "Sampling rate"));
+  out.push("");
 
-  // Audio
-  result.push("Audio");
-  result.push("Format                      : " + getValue(t, "Format\\s*:\\s*E-AC-3"));
-  result.push("Duration                    : " + getValue(t, "Duration"));
-  result.push("Bit rate                    : " + getValue(t, "640 kb/s"));
-  result.push("Channel(s)                  : " + getValue(t, "Channel\\(s\\)"));
-  result.push("Sampling rate               : " + getValue(t, "Sampling rate"));
-  result.push("");
-
-  // Text / Subtitle
-  result.push("Text");
-  const titleRegex = /Title\s*:\s*(.+)/g;
-  const langRegex = /Language\s*:\s*(.+)/g;
-  let titles = [...t.matchAll(titleRegex)];
-  let langs = [...t.matchAll(langRegex)];
-
-  titles.forEach((m, i) => {
-    result.push("Title                       : " + m[1]);
-    if (langs[i]) result.push("Language                    : " + langs[i][1]);
+  // TEXT / SUBTITLE
+  out.push("Text");
+  const textBlocks = t.split(/Text #\\d+/).slice(1);
+  textBlocks.forEach(b => {
+    const title = b.match(/Title\\s*:\\s*(.+)/);
+    const lang = b.match(/Language\\s*:\\s*(.+)/);
+    if (title && lang) {
+      out.push("Title                       : " + title[1]);
+      out.push("Language                    : " + lang[1]);
+    }
   });
+  out.push("");
 
-  result.push("");
+  // MENU
+  out.push("Menu");
+  const menus = t.match(/^\\d{2}:\\d{2}:\\d{2}\\.\\d{3}.+$/gm);
+  if (menus) menus.forEach(m => out.push(m));
 
-  // Menu
-  result.push("Menu");
-  const menuRegex = /^\d{2}:\d{2}:\d{2}\.\d{3}.+$/gm;
-  const menus = t.match(menuRegex);
-  if (menus) menus.forEach(m => result.push(m));
-
-  document.getElementById('output').textContent = result.join("\n");
+  document.getElementById('output').textContent = out.join("\n");
 }
 </script>
 
