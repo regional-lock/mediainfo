@@ -1,82 +1,270 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
-  <meta charset="UTF-8" />
-  <title>MediaInfo Ringkas</title>
-  <style>
-    body { font-family: Arial, sans-serif; background:#111; color:#eee; padding:20px }
-    textarea { width:100%; height:260px; background:#1e1e1e; color:#eee; border:1px solid #444; padding:10px }
-    button { margin:15px 0; padding:10px 18px; font-size:16px; cursor:pointer }
-    pre { background:#1b1b1b; padding:15px; white-space:pre-wrap; border:1px solid #333 }
-    h2 { margin-top:30px }
-  </style>
+    <meta charset="UTF-8" />
+    <title>MediaInfo Ringkas</title>
+
+    <style>
+        :root {
+            --bg: #0f1115;
+            --panel: #161a21;
+            --border: #2a2f3a;
+            --accent: #4da3ff;
+            --text: #e6e6e6;
+            --muted: #9aa4b2;
+        }
+
+        body {
+            margin: 0;
+            padding: 30px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Consolas, Menlo, Monaco, monospace;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        h1 {
+            margin: 0 0 10px;
+            font-size: 22px;
+        }
+
+        p {
+            margin: 0 0 20px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+        }
+
+        textarea {
+            width: 100%;
+            height: 260px;
+            background: #0d1117;
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 13px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, #4da3ff, #3b82f6);
+            border: none;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform .1s ease, box-shadow .1s ease;
+            box-shadow: 0 6px 18px rgba(77, 163, 255, .35);
+        }
+
+        button.secondary {
+            background: #232833;
+            box-shadow: none;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(77, 163, 255, .45);
+        }
+
+        pre {
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 13px;
+            white-space: pre;
+            overflow-x: auto;
+        }
+
+        .status {
+            margin-top: 10px;
+            font-size: 13px;
+            color: var(--accent);
+            display: none;
+        }
+
+        /* ===== SCROLLBAR STYLING ===== */
+
+        /* Chrome, Edge, Safari */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f1115;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: #2a2f3a;
+            border-radius: 8px;
+            border: 2px solid #0f1115;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #3b82f6;
+        }
+
+        /* ===== SCROLLBAR KHUSUS TEXTAREA & PRE ===== */
+
+        /* Chrome / Edge / Safari */
+        textarea::-webkit-scrollbar,
+        pre::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        textarea::-webkit-scrollbar-track,
+        pre::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        textarea::-webkit-scrollbar-thumb,
+        pre::-webkit-scrollbar-thumb {
+            background-color: #2a2f3a;
+            border-radius: 6px;
+        }
+
+        textarea::-webkit-scrollbar-thumb:hover,
+        pre::-webkit-scrollbar-thumb:hover {
+            background-color: #3b82f6;
+        }
+
+        /* Firefox */
+        textarea,
+        pre {
+            scrollbar-width: thin;
+            scrollbar-color: #2a2f3a transparent;
+        }
+    </style>
 </head>
+
 <body>
+    <div class="container">
 
-<h1>MediaInfo Ringkas</h1>
-<p>Tempel hasil MediaInfo lengkap di bawah, lalu klik <b>Ringkaskan</b>.</p>
+        <h1>MediaInfo Ringkas (Scene / Tracker)</h1>
+        <p>Tempel hasil MediaInfo lengkap, lalu klik <b>Ringkaskan</b>.</p>
 
-<textarea id="input"></textarea>
-<button onclick="summarize()">Ringkaskan</button>
+        <div class="card">
+            <textarea id="input" placeholder="Paste MediaInfo di sini..."></textarea>
+            <div class="actions">
+                <button onclick="summarize()">Ringkaskan</button>
+                <button class="secondary" onclick="copyOutput()">Copy Output</button>
+            </div>
+            <div class="status" id="status">✔ Output berhasil disalin</div>
+        </div>
 
-<h2>Hasil</h2>
-<pre id="output"></pre>
+        <div class="card">
+            <pre id="output"></pre>
+        </div>
 
-<script>
-function find(section, key) {
-  const r = new RegExp(section + "[\\s\\S]*?" + key + "\\s*:\\s*(.+)");
-  const m = document.getElementById('input').value.match(r);
-  return m ? m[1].trim() : "-";
-}
+    </div>
 
-function filenameOnly(path) {
-  if (!path) return "-";
-  return path.split(/\\|\//).pop();
-}
+    <script>
+        function find(section, key) {
+            const r = new RegExp(section + "[\\s\\S]*?" + key + "\\s*:\\s*(.+)");
+            const m = document.getElementById("input").value.match(r);
+            return m ? m[1].trim() : "-";
+        }
 
-function summarize() {
-  const t = document.getElementById('input').value;
-  const out = [];
+        function filenameOnly(path) {
+            if (!path) return "-";
+            return path.split(/\\|\//).pop();
+        }
 
-  // VIDEO
-  out.push("Video");
-  out.push("Complete name               : " + filenameOnly(find("General", "Complete name")));
-  out.push("Duration                    : " + find("Video", "Duration"));
-  out.push("Bit rate                    : " + find("Video", "Bit rate"));
-  out.push("Width                       : " + find("Video", "Width"));
-  out.push("Height                      : " + find("Video", "Height"));
-  out.push("");
+        function line(label, value, pad = 18) {
+            return label.padEnd(pad, " ") + ": " + value;
+        }
 
-  // AUDIO
-  out.push("Audio");
-  out.push("Format                      : " + find("Audio", "Format"));
-  out.push("Duration                    : " + find("Audio", "Duration"));
-  out.push("Bit rate                    : " + find("Audio", "Bit rate"));
-  out.push("Channel(s)                  : " + find("Audio", "Channel\\(s\\)"));
-  out.push("Sampling rate               : " + find("Audio", "Sampling rate"));
-  out.push("");
+        function summarize() {
+            const t = document.getElementById("input").value;
+            const textBlocks = t.split(/Text #\d+/).slice(1);
+            const menus = t.match(/^\d{2}:\d{2}:\d{2}\.\d{3}.+$/gm);
 
-  // TEXT / SUBTITLE
-  out.push("Text");
-  const textBlocks = t.split(/Text #\\d+/).slice(1);
-  textBlocks.forEach(b => {
-    const title = b.match(/Title\\s*:\\s*(.+)/);
-    const lang = b.match(/Language\\s*:\\s*(.+)/);
-    if (title && lang) {
-      out.push("Title                       : " + title[1]);
-      out.push("Language                    : " + lang[1]);
-    }
-  });
-  out.push("");
+            const scene = [];
 
-  // MENU
-  out.push("Menu");
-  const menus = t.match(/^\\d{2}:\\d{2}:\\d{2}\\.\\d{3}.+$/gm);
-  if (menus) menus.forEach(m => out.push(m));
+            scene.push("GENERAL");
+            scene.push(line("Format", "MKV"));
+            scene.push(line("Duration", find("General", "Duration")));
+            scene.push(line("File name", filenameOnly(find("General", "Complete name"))));
+            scene.push("");
 
-  document.getElementById('output').textContent = out.join("\n");
-}
-</script>
+            scene.push("VIDEO");
+            scene.push(line("Codec", "AVC / H.264"));
+            scene.push(line("Resolution", find("Video", "Width") + " x " + find("Video", "Height")));
+            scene.push(line("Frame rate", find("Video", "Frame rate")));
+            scene.push(line("Bitrate", find("Video", "Bit rate")));
+            scene.push("");
+
+            scene.push("AUDIO");
+            scene.push(line("Codec", find("Audio", "Format")));
+            scene.push(line("Channels", find("Audio", "Channel\\(s\\)")));
+            scene.push(line("Sampling rate", find("Audio", "Sampling rate")));
+            scene.push(line("Bitrate", find("Audio", "Bit rate")));
+            scene.push("");
+
+            scene.push("SUBTITLES");
+            const subs = {};
+            textBlocks.forEach(b => {
+                const lang = b.match(/Language\s*:\s*(.+)/);
+                if (lang) subs[lang[1]] = (subs[lang[1]] || 0) + 1;
+            });
+
+            if (Object.keys(subs).length) {
+                Object.keys(subs).forEach(l => {
+                    scene.push(line("Language", l + " (" + subs[l] + ")"));
+                });
+            } else {
+                scene.push("-");
+            }
+            scene.push("");
+
+            scene.push("CHAPTERS");
+            if (menus) {
+                menus.forEach(m => {
+                    const match = m.match(/^(\d{2}:\d{2}:\d{2}\.\d{3})\s*:\s*(.+)$/);
+                    if (match) scene.push(line(match[1], match[2], 18));
+                });
+            }
+
+            document.getElementById("output").textContent = scene.join("\n");
+        }
+
+        function copyOutput() {
+            const out = document.getElementById("output").textContent;
+            if (!out) return;
+
+            navigator.clipboard.writeText(out).then(() => {
+                const status = document.getElementById("status");
+                status.style.display = "block";
+                setTimeout(() => status.style.display = "none", 2000);
+            });
+        }
+    </script>
 
 </body>
+
 </html>
